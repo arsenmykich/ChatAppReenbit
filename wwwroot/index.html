@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App - Authentication Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .message-header {
+            font-weight: bold;
+            color: #333;
+        }
+        .message-timestamp {
+            font-size: 12px;
+            color: #666;
+        }
+        .sentiment {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .sentiment.positive { background-color: #d4edda; color: #155724; }
+        .sentiment.negative { background-color: #f8d7da; color: #721c24; }
+        .sentiment.neutral { background-color: #e2e3e5; color: #383d41; }
+    </style>
+</head>
+<body>
+    <!-- Authentication Section -->
+    <div class="container" id="authSection">
+        <h2>Authentication</h2>
+        
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h3>Login</h3>
+            <div class="auth-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button onclick="login()">Login</button>
+            </div>
+            <p><a href="#" onclick="showRegisterForm()">Don't have an account? Register</a></p>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="hidden">
+            <h3>Register</h3>
+            <div class="auth-form">
+                <div class="form-group">
+                    <label for="registerUsername">Username:</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email:</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password:</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button onclick="register()">Register</button>
+            </div>
+            <p><a href="#" onclick="showLoginForm()">Already have an account? Login</a></p>
+        </div>
+
+        <div id="authMessage"></div>
+    </div>
+
+    <!-- Chat Section -->
+    <div class="container hidden" id="chatSection">
+        <h2>Chat</h2>
+        <div id="userInfo"></div>
+        <div id="messages"></div>
+        <div>
+            <input type="text" id="messageInput" placeholder="Type your message..." style="width: 70%; margin-right: 10px;">
+            <button onclick="sendMessage()" style="width: 25%;">Send</button>
+        </div>
+        <button onclick="logout()" style="margin-top: 10px; background-color: #dc3545;">Logout</button>
+    </div>
+
+    <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.js"></script>
+    <script>
+        let connection = null;
+        let currentUser = null;
+        let authToken = null;
+
+        // Authentication functions
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    authToken = result.token;
+                    currentUser = result;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    showAuthMessage('Login successful!', 'success');
+                    showChatSection();
+                    await connectToChat();
+                } else {
+                    showAuthMessage(result.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showAuthMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    authToken = result.token;
+                    currentUser = result;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    showAuthMessage('Registration successful!', 'success');
+                    showChatSection();
+                    await connectToChat();
+                } else {
+                    showAuthMessage(result.error || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showAuthMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            
+            if (connection) {
+                connection.stop();
+            }
+            
+            showAuthSection();
+        }
+
+        // UI functions
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+
+        function showAuthSection() {
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('chatSection').classList.add('hidden');
+        }
+
+        function showChatSection() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('chatSection').classList.remove('hidden');
+            document.getElementById('userInfo').innerHTML = `<p>Welcome, <strong>${currentUser.username}</strong>!</p>`;
+        }
+
+        function showAuthMessage(message, type) {
+            const messageDiv = document.getElementById('authMessage');
+            messageDiv.innerHTML = `<p class="${type}">${message}</p>`;
+        }
+
+        // Chat functions
+        async function connectToChat() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/chathub", {
+                        accessTokenFactory: () => authToken
+                    })
+                    .build();
+
+                connection.on("ReceiveMessage", function (messageData) {
+                    displayMessage(messageData);
+                });
+
+                connection.on("Error", function (error) {
+                    console.error("Chat error:", error);
+                    alert("Chat error: " + error);
+                });
+
+                await connection.start();
+                console.log("Connected to chat hub");
+                
+                // Join general room
+                await connection.invoke("JoinRoom", "general");
+                
+                // Load recent messages
+                await loadMessages();
+                
+            } catch (error) {
+                console.error("Failed to connect to chat:", error);
+                alert("Failed to connect to chat: " + error.message);
+            }
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+
+            try {
+                await connection.invoke("SendMessage", message, "general");
+                messageInput.value = '';
+            } catch (error) {
+                console.error("Failed to send message:", error);
+                alert("Failed to send message: " + error.message);
+            }
+        }
+
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/messages?page=1&pageSize=20', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const messages = await response.json();
+                    messages.reverse().forEach(displayMessage);
+                }
+            } catch (error) {
+                console.error("Failed to load messages:", error);
+            }
+        }
+
+        function displayMessage(messageData) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const timestamp = new Date(messageData.timestamp || messageData.Timestamp).toLocaleString();
+            const sentimentClass = (messageData.sentimentLabel || messageData.SentimentLabel || 'neutral').toLowerCase();
+            const username = messageData.user || messageData.User || messageData.sender?.username || 'Unknown';
+            const content = messageData.message || messageData.Message || messageData.content || messageData.Content;
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    ${username}
+                    <span class="sentiment ${sentimentClass}">${messageData.sentimentLabel || messageData.SentimentLabel || 'neutral'}</span>
+                </div>
+                <div>${content}</div>
+                <div class="message-timestamp">${timestamp}</div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Handle Enter key in message input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Check if user is already logged in
+            const savedToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('currentUser');
+            
+            if (savedToken && savedUser) {
+                authToken = savedToken;
+                currentUser = JSON.parse(savedUser);
+                showChatSection();
+                connectToChat();
+            }
+        });
+    </script>
+</body>
+</html> 

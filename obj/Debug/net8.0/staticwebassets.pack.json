@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\reenbit test\\ChatApp.API\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "D:\\reenbit test\\ChatApp.API\\wwwroot\\test.html",
+      "PackagePath": "staticwebassets\\test.html"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.ChatApp.API.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.ChatApp.API.props",
+      "PackagePath": "build\\ChatApp.API.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.ChatApp.API.props",
+      "PackagePath": "buildMultiTargeting\\ChatApp.API.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.ChatApp.API.props",
+      "PackagePath": "buildTransitive\\ChatApp.API.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

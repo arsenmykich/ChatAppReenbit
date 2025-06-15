@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "Hash": "QwNqmd4bA6qGOxcRlneE4Ki6ZllzCqIYiKmDLfzKuDc=",
+  "Source": "ChatApp.API",
+  "BasePath": "_content/ChatApp.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ChatApp.API\\wwwroot",
+      "Source": "ChatApp.API",
+      "ContentRoot": "D:\\reenbit test\\ChatApp.API\\wwwroot\\",
+      "BasePath": "_content/ChatApp.API",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "D:\\reenbit test\\ChatApp.API\\wwwroot\\index.html",
+      "SourceId": "ChatApp.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\reenbit test\\ChatApp.API\\wwwroot\\",
+      "BasePath": "_content/ChatApp.API",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\index.html"
+    },
+    {
+      "Identity": "D:\\reenbit test\\ChatApp.API\\wwwroot\\test.html",
+      "SourceId": "ChatApp.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\reenbit test\\ChatApp.API\\wwwroot\\",
+      "BasePath": "_content/ChatApp.API",
+      "RelativePath": "test.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\test.html"
+    }
+  ]
+}
