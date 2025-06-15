@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Test</title>
+</head>
+<body>
+    <div>
+        <input type="text" id="userInput" placeholder="Username" value="TestUser" />
+        <input type="text" id="messageInput" placeholder="Message" />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="messages" style="border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin-top: 10px;">
+    </div>
+    <div id="status">Disconnected</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .configureLogging(signalR.LogLevel.Debug)
+            .build();
+
+        connection.start().then(function () {
+            document.getElementById("status").textContent = "Connected";
+            console.log("Connected to SignalR hub");
+        }).catch(function (err) {
+            console.error("Connection failed:", err);
+            document.getElementById("status").textContent = "Connection Failed: " + err;
+        });
+
+        connection.on("ReceiveMessage", function (data) {
+            console.log("Received message:", data);
+            const messages = document.getElementById("messages");
+            messages.innerHTML += `<div><strong>${data.User}:</strong> ${data.Message} [${data.SentimentLabel}]</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+        connection.on("UserConnected", function (message) {
+            console.log("User connected:", message);
+            const messages = document.getElementById("messages");
+            messages.innerHTML += `<div style="color: green;">${message}</div>`;
+        });
+
+        connection.on("Error", function (message) {
+            console.error("Hub error:", message);
+            const messages = document.getElementById("messages");
+            messages.innerHTML += `<div style="color: red;">Error: ${message}</div>`;
+        });
+
+        function sendMessage() {
+            const user = document.getElementById("userInput").value;
+            const message = document.getElementById("messageInput").value;
+            
+            console.log("Sending message:", user, message);
+            
+            if (user && message) {
+                connection.invoke("SendMessage", user, message, "general").then(function() {
+                    console.log("Message sent successfully");
+                    document.getElementById("messageInput").value = "";
+                }).catch(function (err) {
+                    console.error("Error sending message:", err);
+                    document.getElementById("messages").innerHTML += `<div style="color: red;">Send Error: ${err}</div>`;
+                });
+            } else {
+                alert("Please enter both username and message");
+            }
+        }
+
+        document.getElementById("messageInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html> 
